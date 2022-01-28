@@ -1,0 +1,33 @@
+{
+	"id": "4cac5bc8-1059-4b11-8db7-b8dbe0058914",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "https://api.themoviedb.org/3",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "person",
+			"value": "Brad Pitt",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "api_key",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "selectedProviders",
+			"value": "Netflix,Amazon Prime Video,Apple TV Plus",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"name": "Globals",
+	"_postman_variable_scope": "globals",
+	"_postman_exported_at": "2022-01-24T20:05:34.323Z",
+	"_postman_exported_using": "Postman/9.10.0"
+}

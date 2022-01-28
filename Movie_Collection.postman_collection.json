@@ -1,0 +1,234 @@
+{
+	"info": {
+		"_postman_id": "6a97740f-47e6-4fb3-a4a6-4aa35c980029",
+		"name": "Movie_Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET Person",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Total Results is 1\", function () {",
+							"    pm.expect(jsonData.total_results).to.eql(1);",
+							"});",
+							"",
+							"var result = jsonData.results[0];",
+							"var person_id = result.id;",
+							"",
+							"pm.test(\"Person Id exists\", function () {",
+							"    pm.expect(person_id).not.null;",
+							"    pm.expect(person_id).not.undefined;",
+							"});",
+							"",
+							"console.info(\"Found person: \" + result.name + \", with ID: \" + person_id);",
+							"",
+							"//postman.setGlobalVariable(\"person_id\", person_id);",
+							"pm.variables.set(\"person_id\", person_id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/search/person?api_key={{api_key}}&language=en-US&query={{person}}&page=1&include_adult=false",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"search",
+						"person"
+					],
+					"query": [
+						{
+							"key": "api_key",
+							"value": "{{api_key}}"
+						},
+						{
+							"key": "language",
+							"value": "en-US"
+						},
+						{
+							"key": "query",
+							"value": "{{person}}"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "include_adult",
+							"value": "false"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Movie Credits",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"var casts = jsonData.cast;",
+							"",
+							"pm.test(\"Person appears in at least one Cast\", function () {",
+							"    pm.expect(casts).length.greaterThan(0);",
+							"});",
+							"console.info(\"Person appears in '\" + casts.length + \"' casts\");",
+							"",
+							"var movie_ids = casts.map(cast => cast.id);",
+							"pm.variables.set(\"movie_ids\", movie_ids)",
+							"//console.log(movie_ids);",
+							"",
+							"var movie_names = casts.map(cast => cast.original_title);",
+							"pm.variables.set(\"movie_names\", movie_names)",
+							"//console.log(movie_names);",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/person/{{person_id}}/movie_credits?api_key={{api_key}}&language=en-US",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"person",
+						"{{person_id}}",
+						"movie_credits"
+					],
+					"query": [
+						{
+							"key": "api_key",
+							"value": "{{api_key}}"
+						},
+						{
+							"key": "language",
+							"value": "en-US"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Watch Providers",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var movie_ids = pm.variables.get(\"movie_ids\");",
+							"pm.variables.set(\"movie_id\", movie_ids.shift());",
+							"",
+							"var movie_names = pm.variables.get(\"movie_names\");",
+							"pm.variables.set(\"movie_name\", movie_names.shift());",
+							"",
+							"if (Array.isArray(movie_ids) && movie_ids.length > 0) {",
+							"    postman.setNextRequest(\"GET Watch Providers\");",
+							"} else {",
+							"    postman.setNextRequest(null);",
+							"}",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"var results = jsonData.results;",
+							"",
+							"var selectedProviders = pm.variables.get(\"selectedProviders\").split(',');",
+							"",
+							"function filteredProviders(providers) {",
+							"    return (providers.filter(e => selectedProviders.includes(e.provider_name)))",
+							"}",
+							"",
+							"if (typeof results.US != 'undefined') {",
+							"    var flatRateProviders = results.US.flatrate;",
+							"    if (Array.isArray(flatRateProviders) && flatRateProviders.length > 0) {",
+							"        var providers = filteredProviders(flatRateProviders);",
+							"",
+							"        if (Array.isArray(providers) && providers.length > 0) {",
+							"            var provider_names = providers.map(provider => provider.provider_name);",
+							"            console.log(\"Movie '\" + pm.variables.get(\"movie_name\") + \"' is available on: \"+ provider_names);",
+							"        } else {",
+							"            console.warn(\"Movie '\" + pm.variables.get(\"movie_name\") + \"' is not available on any selected streaming services\");",
+							"        }",
+							"",
+							"    } else {",
+							"        console.warn(\"Movie '\" + pm.variables.get(\"movie_name\") + \"' is not available on any streaming services\");",
+							"    }",
+							"} else {",
+							"    console.warn(\"US is undefined for movie \" + pm.variables.get(\"movie_name\"));",
+							"}",
+							"",
+							"",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/movie/{{movie_id}}/watch/providers?api_key={{api_key}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"movie",
+						"{{movie_id}}",
+						"watch",
+						"providers"
+					],
+					"query": [
+						{
+							"key": "api_key",
+							"value": "{{api_key}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
